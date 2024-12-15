@@ -105,6 +105,9 @@ spec:
           {{- if .Values.snuba.replacer.queuedMinMessages }}
           - "--queued-min-messages"
           - "{{ .Values.snuba.replacer.queuedMinMessages }}"
+          {{- if .Values.snuba.replacer.noStrictOffsetReset }}
+          - "--no-strict-offset-reset"
+          {{- end }}
         {{- end }}
         ports:
         - containerPort: {{ template "snuba.port" }}
@@ -129,6 +132,12 @@ spec:
         securityContext:
 {{ toYaml .Values.snuba.replacer.containerSecurityContext | indent 12 }}
 {{- end }}
+{{- if .Values.snuba.replacer.sidecars }}
+{{ toYaml .Values.snuba.replacer.sidecars | indent 6 }}
+{{- end }}
+{{- if .Values.global.sidecars }}
+{{ toYaml .Values.global.sidecars | indent 6 }}
+{{- end }}
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ .Values.serviceAccount.name }}-snuba
       {{- end }}
@@ -138,5 +147,8 @@ spec:
           name: {{ template "sentry.fullname" . }}-snuba
 {{- if .Values.snuba.replacer.volumes }}
 {{ toYaml .Values.snuba.replacer.volumes | indent 6 }}
+{{- end }}
+{{- if .Values.global.volumes }}
+{{ toYaml .Values.global.volumes | indent 6 }}
 {{- end }}
 {{- end }}

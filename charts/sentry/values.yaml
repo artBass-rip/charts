@@ -10,6 +10,8 @@ global:
 
   nodeSelector: {}
   tolerations: []
+  sidecars: []
+  volumes: []
 
 user:
   create: true
@@ -580,6 +582,40 @@ sentry:
     # autoOffsetReset: "earliest"
     # noStrictOffsetReset: false
 
+  ingestFeedback:
+    enabled: false
+    replicas: 1
+    env: []
+    resources: {}
+    #  requests:
+    #    cpu: 100m
+    #    memory: 250Mi
+    affinity: {}
+    nodeSelector: {}
+    securityContext: {}
+    containerSecurityContext: {}
+    # tolerations: []
+    # podLabels: {}
+    # it's better to use prometheus adapter and scale based on
+    # the size of the rabbitmq queue
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPUUtilizationPercentage: 50
+    sidecars: []
+    topologySpreadConstraints: []
+    volumes: []
+    livenessProbe:
+      enabled: true
+      initialDelaySeconds: 5
+      periodSeconds: 320
+    # volumeMounts:
+    #   - mountPath: /dev/shm
+    #     name: dshm
+    # autoOffsetReset: "earliest"
+    # noStrictOffsetReset: false
+
   ingestMonitors:
     enabled: true
     replicas: 1
@@ -1117,6 +1153,7 @@ snuba:
     # queuedMinMessages: ""
     # volumes: []
     # volumeMounts: []
+    # noStrictOffsetReset: false
 
   metricsConsumer:
     enabled: true
@@ -1415,6 +1452,7 @@ snuba:
     env: []
     resources: {}
     affinity: {}
+    sidecars: []
     nodeSelector: {}
     securityContext: {}
     topologySpreadConstraints: []
@@ -1448,6 +1486,7 @@ snuba:
     env: []
     resources: {}
     affinity: {}
+    sidecars: []
     nodeSelector: {}
     securityContext: {}
     topologySpreadConstraints: []
@@ -1736,6 +1775,7 @@ symbolicator:
 
     # volumes: []
     # volumeMounts: []
+    # sidecars: []
 
   # TODO The cleanup cronjob is not yet implemented
   cleanup:
@@ -1743,6 +1783,8 @@ symbolicator:
     # podLabels: {}
     # affinity: {}
     # env: []
+    # volumes: []
+    # sidecars: []
 
 auth:
   register: true
@@ -2132,6 +2174,7 @@ kafka:
       - name: ingest-replay-recordings
       - name: ingest-metrics
       - name: ingest-performance-metrics
+      - name: ingest-feedback-events
       - name: ingest-monitors
       - name: profiles
       - name: ingest-occurrences
@@ -2442,6 +2485,10 @@ metrics:
   affinity: {}
   securityContext: {}
   containerSecurityContext: {}
+
+  volumes: []
+  sidecars: []
+
   # schedulerName:
   # Optional extra labels for pod, i.e. redis-client: "true"
   # podLabels: {}
@@ -2478,3 +2525,39 @@ revisionHistoryLimit: 10
 #   options: []
 
 extraManifests: []
+
+pgbouncer:
+  enabled: false
+  postgres:
+    cp_max: 10
+    cp_min: 5
+    host: ''
+    dbname: ''
+    user: ''
+    password: ''
+  image:
+    repository: "bitnami/pgbouncer"
+    tag: "1.23.1-debian-12-r5"
+    pullPolicy: IfNotPresent
+  replicas: 2
+  podDisruptionBudget:
+    enabled: true
+    # Define either 'minAvailable' or 'maxUnavailable', never both.
+    minAvailable: 1
+    # -- Maximum unavailable pods set in PodDisruptionBudget. If set, 'minAvailable' is ignored.
+    # maxUnavailable: 1
+  authType: "md5"
+  maxClientConn: "8192"
+  poolSize: "50"
+  poolMode: "transaction"
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 25%
+  priorityClassName: ''
+  topologySpreadConstraints: []
